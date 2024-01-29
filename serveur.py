@@ -20,7 +20,7 @@ def recvFileFrmKlg(client_sock):
     file_status = False
     try:
         while running_thrd:
-            file_name = client_sock.recv(1024)
+            file_name = client_sock.recv(1024) #Recoit le nom du fichier
             if not file_name:
                 print("Aucune donnée reçu, fin de la connexion")
                 break
@@ -29,9 +29,9 @@ def recvFileFrmKlg(client_sock):
                 print("recv debut")
                 file_bytes = b"" 
                 while running_thrd:
-                    data = client_sock.recv(1024) 
+                    data = client_sock.recv(1024) #Va recevoir les bytes du fichier du client
                     file_bytes += data    
-                    if b"<END>" in file_bytes: 
+                    if b"<END>" in file_bytes: #Si il rencontre la chaine de caractère "<END>" il arrête d'écrire
                         file_bytes = file_bytes[:-5]
                         file_status = True
                         break
@@ -49,11 +49,11 @@ def recvFileFrmKlg(client_sock):
 
 if __name__ == '__main__' :
     host, port = ("localhost", 9998)
-    server = socket.socket(socket.AF_INET, socket.SOCK_STREAM) 
+    server = socket.socket(socket.AF_INET, socket.SOCK_STREAM) #AF_INET = IPv4, SOCK_STREAM = TCP
     server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-    server.bind((host, port)) 
-    server.listen() 
-    #client, addr = server.accept() 
+    server.bind((host, port)) #Assigne l'IP au port
+    server.listen() #Prépare le socket à accepter des connections
+    #client, addr = server.accept() #Pour accepter une connexion d'un client TCP
     server.setblocking(True)
 
     running_thrd = True
