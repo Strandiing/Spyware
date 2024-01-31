@@ -3610,9 +3610,3 @@ c -> Window Server StatusIndicator
 c -> Window Server StatusIndicator
 c -> Window Server StatusIndicator
 c -> Window Server StatusIndicator
-Key.ctrl -> Window Server StatusIndicator
-c -> Window Server StatusIndicator
-c -> Window Server StatusIndicator
-Key.ctrl -> Window Server StatusIndicator
-c -> Window Server StatusIndicator
-c -> Window Server StatusIndicator

