@@ -1,0 +1,1 @@
+([('spyware', '/Users/yvann/Desktop/ESGI/Spyware/dist/spyware', 'EXECUTABLE')],)

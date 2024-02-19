@@ -8,7 +8,7 @@ import socket
 import time
 import sys
 
-host, port = ("localhost", 9998)
+host, port = ("10.33.2.202", 9998)
 today = datetime.now()
 running = True
 
